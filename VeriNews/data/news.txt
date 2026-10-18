@@ -1,0 +1,34 @@
+# VeriNews news records
+# id|headline|source|category|date(YYYY-MM-DD)|status(VERIFIED/DEBUNKED/UNVERIFIED)
+1|ISRO's Chandrayaan-3 lander touches down near the Moon's south pole|ISRO|space|2023-08-23|VERIFIED
+2|India becomes first country to land a spacecraft near the lunar south pole with Chandrayaan-3|Reuters|space|2023-08-23|VERIFIED
+3|Chandrayaan-3 Vikram lander successfully lands on the Moon|The Hindu|space|2023-08-23|VERIFIED
+4|ISRO launches Aditya-L1, India's first solar observatory mission|ISRO|space|2023-09-02|VERIFIED
+5|Aditya-L1 mission to study the Sun lifts off from Sriharikota|The Hindu|space|2023-09-02|VERIFIED
+6|RBI announces withdrawal of 2000 rupee notes from circulation|Reserve Bank of India|economy|2023-05-19|VERIFIED
+7|2000 rupee notes to be withdrawn from circulation but remain legal tender, says RBI|Indian Express|economy|2023-05-19|VERIFIED
+8|RBI withdraws 2000 rupee banknotes and asks public to exchange them at banks|Reuters|economy|2023-05-19|VERIFIED
+9|Government demonetises 500 and 1000 rupee notes|PIB|economy|2016-11-08|VERIFIED
+10|500 and 1000 rupee notes cease to be legal tender from midnight|The Hindu|economy|2016-11-08|VERIFIED
+11|WHO declares COVID-19 outbreak a global pandemic|WHO|health|2020-03-11|VERIFIED
+12|World Health Organization characterises coronavirus outbreak as a pandemic|Reuters|health|2020-03-11|VERIFIED
+13|WHO declares end of COVID-19 global health emergency|WHO|health|2023-05-05|VERIFIED
+14|COVID-19 no longer a global health emergency, says WHO|BBC|health|2023-05-05|VERIFIED
+15|India win T20 World Cup 2024, beating South Africa in the final|ICC|sports|2024-06-29|VERIFIED
+16|India beat South Africa by seven runs to clinch T20 World Cup title|BBC|sports|2024-06-29|VERIFIED
+17|Neeraj Chopra wins javelin gold at Tokyo Olympics|The Hindu|sports|2021-08-07|VERIFIED
+18|Neeraj Chopra clinches India's first Olympic gold in athletics with javelin throw|Reuters|sports|2021-08-07|VERIFIED
+19|Gukesh becomes youngest world chess champion after defeating Ding Liren|Reuters|sports|2024-12-12|VERIFIED
+20|D Gukesh wins World Chess Championship at age 18|Indian Express|sports|2024-12-12|VERIFIED
+21|NASA launches James Webb Space Telescope|NASA|space|2021-12-25|VERIFIED
+22|James Webb Space Telescope lifts off on Ariane 5 rocket|BBC|space|2021-12-25|VERIFIED
+23|5G mobile towers are spreading coronavirus|PIB Fact Check|technology|2020-04-05|DEBUNKED
+24|Drinking hot water every 15 minutes kills coronavirus|PIB Fact Check|health|2020-03-20|DEBUNKED
+25|New 2000 rupee note contains a GPS nano chip to track black money|Alt News|economy|2016-11-10|DEBUNKED
+26|NASA confirms Earth will go dark for six days|Snopes|space|2014-12-15|DEBUNKED
+27|UNESCO declares Jana Gana Mana the best national anthem in the world|Alt News|culture|2016-07-01|DEBUNKED
+28|Salt shortage in India pushes price to 400 rupees per kg|PIB|economy|2016-11-12|DEBUNKED
+29|Government giving free laptops to all students who register through this link|PIB Fact Check|technology|2021-06-01|DEBUNKED
+30|Garlic water cures coronavirus infection|WHO|health|2020-03-01|DEBUNKED
+31|Viral post claims new 1000 rupee note will be introduced soon|Social Media Post|economy|2024-02-10|UNVERIFIED
+32|Message claims all schools will stay closed for a week due to heatwave|WhatsApp Forward|governance|2024-05-20|UNVERIFIED

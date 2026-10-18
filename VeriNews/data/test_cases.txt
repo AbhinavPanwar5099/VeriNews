@@ -1,0 +1,27 @@
+# claim|source|YYYY-MM-DD|EXPECTED   (source and date may be left empty)
+# EXPECTED: LIKELY_VERIFIED, NEEDS_VERIFICATION, POTENTIALLY_SUSPICIOUS
+# --- true events from reliable sources
+ISRO's Chandrayaan-3 lands near the Moon's south pole|The Hindu|2023-08-23|LIKELY_VERIFIED
+RBI withdraws 2000 rupee notes from circulation|Indian Express|2023-05-19|LIKELY_VERIFIED
+Neeraj Chopra wins gold medal in javelin at Tokyo Olympics|NDTV|2021-08-07|LIKELY_VERIFIED
+India wins T20 World Cup final against South Africa|Times of India|2024-06-30|LIKELY_VERIFIED
+WHO declares COVID-19 a pandemic|BBC|2020-03-11|LIKELY_VERIFIED
+Gukesh becomes youngest world chess champion|The Hindu|2024-12-12|LIKELY_VERIFIED
+# --- true content but weak source, wrong date or vague wording
+RBI withdraws 2000 rupee notes from circulation|WhatsApp Forward||NEEDS_VERIFICATION
+Chandrayaan-3 lands on the Moon|YouTube Video|2019-09-07|NEEDS_VERIFICATION
+ISRO launches a mission to study the Sun|||NEEDS_VERIFICATION
+Gukesh wins world chess championship|WhatsApp Forward||NEEDS_VERIFICATION
+# --- known hoaxes
+5G towers spread coronavirus|WhatsApp Forward|2020-04-10|POTENTIALLY_SUSPICIOUS
+Hot water kills coronavirus if you drink it every 15 minutes|Social Media Post||POTENTIALLY_SUSPICIOUS
+New 2000 rupee notes have a GPS chip|WhatsApp Forward|2016-11-10|POTENTIALLY_SUSPICIOUS
+NASA says Earth will go dark for six days|YouTube Video||POTENTIALLY_SUSPICIOUS
+UNESCO declares Jana Gana Mana best national anthem|WhatsApp Forward||POTENTIALLY_SUSPICIOUS
+# --- nothing in the database
+Scientists discover water on the surface of Mars|Reuters||NEEDS_VERIFICATION
+Aliens land in Paris tonight|WhatsApp Forward||POTENTIALLY_SUSPICIOUS
+New metro line opens in the city next month|||NEEDS_VERIFICATION
+# --- negation and unverified items
+5G towers do not spread coronavirus|WHO||NEEDS_VERIFICATION
+New 1000 rupee note to be introduced|Social Media Post||NEEDS_VERIFICATION

@@ -1,0 +1,22 @@
+# Source registry: name|reliability (0-100)
+# These ratings are ILLUSTRATIVE assumptions for the prototype. Justify or replace them
+# in your report (e.g. based on editorial standards, official status, fact-check record).
+ISRO|98
+NASA|98
+WHO|95
+Reserve Bank of India|98
+ICC|95
+PIB|92
+PIB Fact Check|92
+Reuters|92
+BBC|90
+The Hindu|90
+Indian Express|88
+Alt News|85
+Snopes|85
+NDTV|80
+Times of India|78
+YouTube Video|30
+Social Media Post|20
+Anonymous Blog|15
+WhatsApp Forward|10
