@@ -15,7 +15,7 @@
 //    5. No supporting news                    -> SUSPICIOUS if the source is bad,
 //                                                otherwise NEEDS FURTHER VERIFICATION
 //
-//  Data structures used:
+//  Data structures used: 
 //    Linked list  - stores all news records
 //    Hash table   - finds news containing a word quickly
 //                   (an array of linked lists)
