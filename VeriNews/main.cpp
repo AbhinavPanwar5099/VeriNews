@@ -217,7 +217,7 @@ public:
 // ---------------------------------------------------------------------
 struct NewsNode {
     News data;
-    NewsNode* next;
+    NewsNode* next; 
 };
 
 class NewsList {
