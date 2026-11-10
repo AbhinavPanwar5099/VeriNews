@@ -11,7 +11,7 @@ g++ -std=c++11 main.cpp -o verinews.exe
 if errorlevel 1 goto failed
 verinews.exe
 pause
-exit /b 0
+exit /b 0 
 :nocompiler
 echo No C++ compiler found. Install Code::Blocks (the "mingw-setup.exe" version).
 pause
