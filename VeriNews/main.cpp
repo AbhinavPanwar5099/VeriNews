@@ -1,4 +1,4 @@
-// =====================================================================
+//  =====================================================================
 //  VeriNews : News Credibility and Verification System
 //  Team ByteForce (DSCPP-III-2026-T224), Graphic Era University
 //
