@@ -16,7 +16,7 @@
 14|COVID-19 no longer a global health emergency, says WHO|BBC|health|2023-05-05|VERIFIED
 15|India win T20 World Cup 2024, beating South Africa in the final|ICC|sports|2024-06-29|VERIFIED
 16|India beat South Africa by seven runs to clinch T20 World Cup title|BBC|sports|2024-06-29|VERIFIED
-17|Neeraj Chopra wins javelin gold at Tokyo Olympics|The Hindu|sports|2021-08-07|VERIFIED
+17|Neeraj Chopra wins javelin gold at  Tokyo Olympics|The Hindu|sports|2021-08-07|VERIFIED
 18|Neeraj Chopra clinches India's first Olympic gold in athletics with javelin throw|Reuters|sports|2021-08-07|VERIFIED
 19|Gukesh becomes youngest world chess champion after defeating Ding Liren|Reuters|sports|2024-12-12|VERIFIED
 20|D Gukesh wins World Chess Championship at age 18|Indian Express|sports|2024-12-12|VERIFIED
