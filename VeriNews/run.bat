@@ -1,4 +1,4 @@
-@echo off
+@echo off 
 REM VeriNews Lite - double-click to compile and run.
 cd /d "%~dp0"
 where g++ >nul 2>nul && goto compile
