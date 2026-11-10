@@ -1,7 +1,7 @@
 # VeriNews news records
 # id|headline|source|category|date(YYYY-MM-DD)|status(VERIFIED/DEBUNKED/UNVERIFIED)
 1|ISRO's Chandrayaan-3 lander touches down near the Moon's south pole|ISRO|space|2023-08-23|VERIFIED
-2|India becomes first country to land a spacecraft near the lunar south pole with Chandrayaan-3|Reuters|space|2023-08-23|VERIFIED
+2|India becomes first country to land a spacecraft near the lunar south pole with Chandrayaan-3|Reuters|space|2023-08-23|VERIFIED 
 3|Chandrayaan-3 Vikram lander successfully lands on the Moon|The Hindu|space|2023-08-23|VERIFIED
 4|ISRO launches Aditya-L1, India's first solar observatory mission|ISRO|space|2023-09-02|VERIFIED
 5|Aditya-L1 mission to study the Sun lifts off from Sriharikota|The Hindu|space|2023-09-02|VERIFIED
