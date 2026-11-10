@@ -1,7 +1,7 @@
 # Source registry: name|reliability (0-100)
 # These ratings are ILLUSTRATIVE assumptions for the prototype. Justify or replace them
 # in your report (e.g. based on editorial standards, official status, fact-check record).
-ISRO|98
+ISRO|98 
 NASA|98
 WHO|95
 Reserve Bank of India|98
