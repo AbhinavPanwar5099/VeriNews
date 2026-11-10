@@ -5,7 +5,7 @@
 //  A user types a news headline. The program compares it with stored
 //  news (verified and fake) and gives a score from 0 to 100 and one of
 //  three answers: LIKELY VERIFIED, NEEDS FURTHER VERIFICATION or
-//  POTENTIALLY SUSPICIOUS.
+//  POTENTIALLY SUSPICIOUS. 
 //
 //  Rules that can change the answer (checked in this order):
 //    1. Fewer than 2 useful words            -> NEEDS FURTHER VERIFICATION
