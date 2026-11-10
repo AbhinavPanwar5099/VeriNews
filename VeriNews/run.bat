@@ -19,4 +19,4 @@ exit /b 1
 :failed
 echo Compilation failed. Copy the messages above and ask for help.
 pause
-exit /b 1
+exit /b 1 
