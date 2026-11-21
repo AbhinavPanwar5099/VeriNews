@@ -1,0 +1,1104 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>VeriNews: check a headline before you share it</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ------------------------------------------------------------------ tokens */
+:root {
+  --page: #ECEEEE;
+  --card: #FFFFFF;
+  --card-2: #F5F6F6;
+  --text: #1E2028;
+  --text-2: #4E5460;
+  --text-3: #6A707B;
+  --line: #DADDE0;
+  --shadow: 0 1px 2px rgba(30,32,40,.06), 0 12px 32px -12px rgba(30,32,40,.14);
+  /* the dark "ink" sections stay dark in both themes */
+  --ink: #23252E;
+  --ink-2: #2C2F39;
+  --ink-text: #EEF0EE;
+  --ink-text-2: #B4BAB6;
+  --ink-line: rgba(238,240,238,.14);
+  --moss: #5E7A69;
+  --moss-light: #A9C2B1;
+  --verified: #2F7D50;
+  --verified-tint: #E1F0E6;
+  --needs: #9A6514;
+  --needs-tint: #F8EDD8;
+  --suspicious: #B23F33;
+  --suspicious-tint: #F8E3E0;
+  --serif: "Instrument Serif", "Iowan Old Style", Georgia, "Times New Roman", serif;
+  --sans: "Geist", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  color-scheme: light;
+  box-sizing: border-box;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --page: #191B21;
+    --card: #23262E;
+    --card-2: #2A2D36;
+    --text: #ECEEEC;
+    --text-2: #B6BBC2;
+    --text-3: #9298A2;
+    --line: #353944;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 12px 32px -12px rgba(0,0,0,.5);
+    --verified: #6CC791;
+    --verified-tint: #1E3527;
+    --needs: #E2AE58;
+    --needs-tint: #3A2E17;
+    --suspicious: #F08A7E;
+    --suspicious-tint: #3E1F1C;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --page: #191B21; --card: #23262E; --card-2: #2A2D36; --text: #ECEEEC; --text-2: #B6BBC2; --text-3: #9298A2;
+  --line: #353944; --shadow: 0 1px 2px rgba(0,0,0,.3), 0 12px 32px -12px rgba(0,0,0,.5);
+  --verified: #6CC791; --verified-tint: #1E3527; --needs: #E2AE58; --needs-tint: #3A2E17;
+  --suspicious: #F08A7E; --suspicious-tint: #3E1F1C; color-scheme: dark;
+}
+html { scroll-padding-top: calc(env(safe-area-inset-top, 0px) + 88px); scroll-behavior: smooth; }
+*, *::before, *::after { box-sizing: border-box; }
+body { margin: 0; background: var(--page); color: var(--text); font: 400 16px/1.6 var(--sans); -webkit-font-smoothing: antialiased; }
+h1, h2, h3 { margin: 0; font-weight: 400; }
+p { margin: 0; }
+a { color: inherit; }
+button, input, select { font: inherit; color: inherit; }
+img, svg, canvas { max-width: 100%; display: block; }
+:focus-visible { outline: 2px solid var(--moss); outline-offset: 3px; border-radius: 6px; }
+.wrap { width: min(1160px, 100% - 40px); margin: 0 auto; }
+.serif { font-family: var(--serif); }
+.display { font-family: var(--serif); font-size: clamp(40px, 6.2vw, 76px); line-height: 1.02; letter-spacing: -0.01em; }
+.h2 { font-family: var(--serif); font-size: clamp(34px, 4.6vw, 56px); line-height: 1.04; letter-spacing: -0.005em; }
+.lede { font-size: 17px; color: var(--text-2); max-width: 58ch; }
+.section { padding: 112px 0; }
+.section-head { text-align: center; display: grid; gap: 16px; justify-items: center; margin-bottom: 56px; }
+.section-head .lede { text-align: center; }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 0 20px;
+  border-radius: 999px; border: 1px solid transparent; font-weight: 500; font-size: 15px; text-decoration: none; cursor: pointer;
+  transition: background .2s, border-color .2s, color .2s; }
+.btn-light { background: #F3F4F2; color: #1E2028; }
+.btn-light:hover { background: #FFFFFF; }
+.btn-ghost { background: transparent; color: var(--ink-text); border-color: rgba(238,240,238,.35); }
+.btn-ghost:hover { border-color: var(--ink-text); }
+.btn-dark { background: var(--ink); color: var(--ink-text); }
+.btn-dark:hover { background: #31343F; }
+.on-ink { color: var(--ink-text); }
+
+/* ------------------------------------------------------------------ nav */
+.nav { position: fixed; top: calc(env(safe-area-inset-top, 0px) + 14px); left: 0; right: 0; z-index: 50; pointer-events: none; }
+.nav-bar { pointer-events: auto; width: min(1160px, 100% - 24px); margin: 0 auto; display: flex; align-items: center; gap: 24px;
+  padding: 8px 8px 8px 18px; border-radius: 999px; background: rgba(35,37,46,.82); backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px); border: 1px solid rgba(238,240,238,.1); color: var(--ink-text); }
+.brand { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; font-weight: 600; font-size: 17px; letter-spacing: -0.01em; }
+.nav-links { display: flex; gap: 4px; margin: 0 auto; }
+.nav-links a { text-decoration: none; font-size: 14px; color: var(--ink-text-2); padding: 10px 12px; border-radius: 999px; }
+.nav-links a:hover { color: var(--ink-text); }
+.nav .btn { min-height: 40px; font-size: 14px; }
+@media (max-width: 880px) { .nav-links { display: none; } .nav-bar { justify-content: space-between; } }
+
+/* ------------------------------------------------------------------ hero */
+.hero { position: relative; overflow: hidden; color: var(--ink-text);
+  background: radial-gradient(70% 60% at 85% 95%, rgba(94,122,105,.75), transparent 70%),
+              radial-gradient(60% 50% at 10% 0%, rgba(80,86,104,.55), transparent 70%),
+              linear-gradient(180deg, #23252E 0%, #2B2E38 55%, #3B4A43 100%);
+  padding: 150px 0 0; }
+.hero-copy { text-align: center; display: grid; justify-items: center; gap: 20px; }
+.hero-copy .lede { color: var(--ink-text-2); text-align: center; }
+.hero-actions { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin-top: 6px; }
+.hero-stage { margin: 64px auto 0; width: min(980px, 100% - 32px); }
+.device { background: #15161B; border-radius: 22px 22px 0 0; padding: 12px 12px 0; box-shadow: 0 -2px 0 rgba(255,255,255,.06) inset, 0 40px 80px -30px rgba(0,0,0,.6); }
+.screen { background: var(--card); color: var(--text); border-radius: 12px 12px 0 0; overflow: hidden; }
+.app-top { display: flex; align-items: center; gap: 12px; padding: 12px 18px; border-bottom: 1px solid var(--line); font-size: 13px; }
+.app-top .pill { margin-left: auto; padding: 5px 12px; border-radius: 999px; background: var(--card-2); color: var(--text-2); }
+.app-body { display: grid; grid-template-columns: 1.35fr 1fr; gap: 0; }
+.app-main { padding: 22px 24px 26px; border-right: 1px solid var(--line); }
+.app-side { padding: 22px 24px 26px; background: var(--card-2); display: grid; gap: 14px; align-content: start; }
+.claim-label { font-size: 12px; color: var(--text-3); }
+.claim-text { font-family: var(--serif); font-size: 26px; line-height: 1.15; margin: 4px 0 18px; }
+.mini-label { font-size: 12px; color: var(--text-3); margin-bottom: 6px; }
+@media (max-width: 760px) { .app-body { grid-template-columns: 1fr; } .app-main { border-right: 0; border-bottom: 1px solid var(--line); } .hero { padding-top: 120px; } }
+
+/* ------------------------------------------------------------------ shared result widgets */
+.verdict { display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 999px; font-size: 13px; font-weight: 600; }
+.verdict::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+.v-ok { color: var(--verified); background: var(--verified-tint); }
+.v-needs { color: var(--needs); background: var(--needs-tint); }
+.v-bad { color: var(--suspicious); background: var(--suspicious-tint); }
+.gauge { position: relative; width: 132px; height: 132px; flex: none; }
+.gauge svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+.gauge .track { stroke: var(--line); }
+.gauge .value { transition: stroke-dashoffset 1s cubic-bezier(.2,.8,.2,1), stroke .4s; }
+.gauge-num { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; }
+.gauge-num b { font-family: var(--serif); font-weight: 400; font-size: 44px; line-height: 1; font-variant-numeric: tabular-nums; }
+.gauge-num span { font-size: 12px; color: var(--text-3); }
+.stack { position: relative; height: 14px; border-radius: 999px; background: var(--card-2); border: 1px solid var(--line); overflow: visible; }
+.stack-fill { position: absolute; inset: 0; display: flex; border-radius: 999px; overflow: hidden; }
+.stack-fill span { height: 100%; width: 0; transition: width .9s cubic-bezier(.2,.8,.2,1); }
+.seg-match { background: #3D5A4A; }
+.seg-pub { background: #7A9A86; }
+.seg-src { background: #B9CDBF; }
+.stack.capped .stack-fill { opacity: .35; }
+.stack-tick { position: absolute; top: -5px; bottom: -5px; width: 2px; background: var(--text-3); opacity: .55; }
+.stack-cap { position: absolute; top: -8px; bottom: -8px; width: 4px; margin-left: -2px; border-radius: 2px; background: var(--suspicious); box-shadow: 0 0 0 2px var(--card); transition: left .9s cubic-bezier(.2,.8,.2,1); }
+.stack-scale { position: relative; height: 18px; font-size: 11px; color: var(--text-3); margin-top: 6px; }
+.stack-scale span { position: absolute; transform: translateX(-50%); }
+.stack-scale span:first-child { transform: none; }
+.stack-scale span:last-child { transform: translateX(-100%); }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 13px; color: var(--text-2); margin-top: 10px; }
+.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
+.factor { display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; font-size: 14px; }
+.factor-bar { grid-column: 1 / -1; height: 6px; border-radius: 3px; background: var(--card-2); overflow: hidden; }
+.factor-bar span { display: block; height: 100%; width: 0; border-radius: 3px; transition: width .9s cubic-bezier(.2,.8,.2,1); }
+.factor b { font-weight: 600; font-variant-numeric: tabular-nums; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { font-size: 12.5px; padding: 4px 10px; border-radius: 999px; background: var(--card-2); border: 1px solid var(--line); color: var(--text-2); }
+
+/* ------------------------------------------------------------------ approaches strip */
+.strip { padding: 56px 0 0; text-align: center; }
+.strip p { font-size: 15px; color: var(--text-2); }
+.strip-row { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px 34px; margin-top: 18px; color: var(--text-3); font-size: 15px; }
+.strip-row span { display: inline-flex; align-items: center; gap: 8px; }
+.strip-row svg { width: 18px; height: 18px; }
+
+/* ------------------------------------------------------------------ how it works */
+.steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+@media (max-width: 900px) { .steps { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 600px) { .steps { grid-template-columns: 1fr; } }
+.step { background: var(--card); border-radius: 18px; box-shadow: var(--shadow); padding: 12px 12px 22px; display: grid; gap: 12px; align-content: start; }
+.step-art { background: var(--card-2); border-radius: 12px; height: 132px; display: grid; place-items: center; padding: 14px; overflow: hidden; }
+.step-art svg { width: 100%; height: 100%; }
+.step-num { font-size: 13px; color: var(--text-3); padding: 0 10px; }
+.step h3 { font-family: var(--sans); font-weight: 600; font-size: 17px; padding: 0 10px; }
+.step p { font-size: 14.5px; color: var(--text-2); padding: 0 10px; }
+
+/* ------------------------------------------------------------------ signature: reports -> verdict */
+.ink { background: radial-gradient(60% 55% at 50% 55%, rgba(94,122,105,.35), transparent 70%), linear-gradient(180deg, #23252E, #262933 60%, #23252E); color: var(--ink-text); }
+.ink .lede { color: var(--ink-text-2); }
+.field-wrap { position: relative; }
+#field { width: 100%; height: 440px; }
+.field-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 8px; }
+.field-stats div { display: grid; gap: 2px; }
+.field-stats div:nth-child(2) { text-align: center; }
+.field-stats div:nth-child(3) { text-align: right; }
+.field-stats b { font-family: var(--serif); font-weight: 400; font-size: clamp(30px, 4vw, 44px); line-height: 1.05; font-variant-numeric: tabular-nums; }
+.field-stats span { font-size: 13.5px; color: var(--ink-text-2); }
+.slider-row { display: flex; align-items: center; justify-content: center; gap: 16px; margin-top: 32px; flex-wrap: wrap; }
+.slider-row label { font-size: 14px; color: var(--ink-text-2); }
+.range { -webkit-appearance: none; appearance: none; width: min(380px, 70vw); height: 4px; border-radius: 2px; background: rgba(238,240,238,.2); cursor: pointer; }
+.range::-webkit-slider-thumb { -webkit-appearance: none; width: 22px; height: 22px; border-radius: 50%; background: #F3F4F2; border: 4px solid var(--moss); box-shadow: 0 0 0 6px rgba(169,194,177,.18); }
+.range::-moz-range-thumb { width: 14px; height: 14px; border-radius: 50%; background: #F3F4F2; border: 4px solid var(--moss); box-shadow: 0 0 0 6px rgba(169,194,177,.18); }
+.field-note { text-align: center; font-size: 13px; color: var(--ink-text-2); margin-top: 14px; }
+.field-legend { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 20px; font-size: 13px; color: var(--ink-text-2); margin-top: 18px; }
+.field-legend i { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; }
+@media (max-width: 600px) { #field { height: 330px; } .field-stats span { font-size: 12px; } }
+
+/* ------------------------------------------------------------------ demo */
+.demo { display: grid; grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.25fr); gap: 20px; align-items: start; }
+@media (max-width: 900px) { .demo { grid-template-columns: 1fr; } }
+.demo-list { background: var(--card); border-radius: 20px; box-shadow: var(--shadow); padding: 10px; display: grid; gap: 4px; }
+.demo-item { text-align: left; background: transparent; border: 1px solid transparent; border-radius: 14px; padding: 12px 14px; cursor: pointer; display: grid; gap: 4px; transition: background .2s, border-color .2s; }
+.demo-item:hover { background: var(--card-2); }
+.demo-item[aria-pressed="true"] { background: var(--card-2); border-color: var(--line); }
+.demo-item .t { font-family: var(--serif); font-size: 19px; line-height: 1.2; }
+.demo-item .k { font-size: 12.5px; color: var(--text-3); }
+.demo-note { font-size: 13px; color: var(--text-3); padding: 10px 14px 6px; }
+.result { background: var(--card); border-radius: 20px; box-shadow: var(--shadow); padding: 28px; display: grid; gap: 22px; }
+.result-top { display: flex; gap: 22px; align-items: center; }
+.result-top .claim-text { font-size: 28px; margin: 8px 0 10px; }
+.result-meta { font-size: 13.5px; color: var(--text-3); }
+.result-block { display: grid; gap: 12px; }
+.result-block h3 { font-family: var(--sans); font-size: 14px; font-weight: 600; color: var(--text-2); }
+.reason { border-radius: 12px; padding: 14px 16px; font-size: 14.5px; background: var(--card-2); }
+.reason b { font-weight: 600; }
+@media (max-width: 560px) { .result-top { flex-direction: column; align-items: flex-start; } .result { padding: 20px; } }
+.checker { background: var(--card); border-radius: 20px; box-shadow: var(--shadow); padding: 24px; margin-bottom: 20px; display: grid; gap: 14px; }
+.checker-row { display: grid; grid-template-columns: minmax(0, 1fr) 220px auto; gap: 10px; align-items: end; }
+@media (max-width: 820px) { .checker-row { grid-template-columns: 1fr; } }
+.field-label { display: block; font-size: 13.5px; font-weight: 500; color: var(--text-2); margin-bottom: 6px; }
+.text-input { width: 100%; min-height: 48px; border-radius: 12px; border: 1px solid var(--line); background: var(--card-2); padding: 0 14px; font-size: 16px; }
+.text-input:focus { outline: none; border-color: var(--moss); box-shadow: 0 0 0 3px rgba(94,122,105,.2); background: var(--card); }
+.checker .btn-dark { min-height: 48px; }
+.checker .btn-dark[disabled] { opacity: .6; cursor: progress; }
+.status { display: flex; align-items: center; gap: 8px; font-size: 13.5px; color: var(--text-3); }
+.status i { width: 8px; height: 8px; border-radius: 50%; background: var(--text-3); flex: none; }
+.status.on i { background: var(--verified); }
+.status.off i { background: var(--needs); }
+.status code { font-size: 13px; color: var(--text); }
+.form-error { color: var(--suspicious); font-size: 14px; }
+.loading { display: grid; gap: 14px; justify-items: center; text-align: center; padding: 48px 12px; color: var(--text-2); }
+.spinner { width: 36px; height: 36px; border-radius: 50%; border: 3px solid var(--line); border-top-color: var(--moss); animation: spin .9s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ------------------------------------------------------------------ scoring calculator */
+.calc { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px; }
+@media (max-width: 900px) { .calc { grid-template-columns: 1fr; } }
+.panel { background: var(--card); border-radius: 20px; box-shadow: var(--shadow); padding: 28px; }
+.formula { font-family: var(--serif); font-size: clamp(22px, 2.6vw, 30px); line-height: 1.25; margin-bottom: 22px; }
+.control { display: grid; gap: 8px; margin-bottom: 20px; }
+.control-head { display: flex; justify-content: space-between; font-size: 14.5px; }
+.control-head b { font-weight: 600; font-variant-numeric: tabular-nums; }
+.control small { font-size: 13px; color: var(--text-3); }
+.range-light { -webkit-appearance: none; appearance: none; width: 100%; height: 4px; border-radius: 2px; background: var(--line); cursor: pointer; }
+.range-light::-webkit-slider-thumb { -webkit-appearance: none; width: 20px; height: 20px; border-radius: 50%; background: var(--card); border: 4px solid var(--moss); }
+.range-light::-moz-range-thumb { width: 12px; height: 12px; border-radius: 50%; background: var(--card); border: 4px solid var(--moss); }
+.select { width: 100%; min-height: 44px; border-radius: 12px; border: 1px solid var(--line); background: var(--card-2); padding: 0 12px; }
+.bands { display: grid; grid-template-columns: 50fr 30fr 20fr; gap: 4px; margin-top: 8px; font-size: 12.5px; }
+.bands div { border-top: 3px solid; padding-top: 6px; color: var(--text-2); }
+.bands .b1 { border-color: var(--suspicious); } .bands .b2 { border-color: var(--needs); } .bands .b3 { border-color: var(--verified); }
+
+/* ------------------------------------------------------------------ rules */
+.rules { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; counter-reset: rule; }
+@media (max-width: 900px) { .rules { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 600px) { .rules { grid-template-columns: 1fr; } }
+.rule { background: var(--card); border-radius: 16px; padding: 18px 20px; display: grid; gap: 6px; border: 1px solid var(--line); }
+.rule-n { font-size: 13px; color: var(--text-3); }
+.rule p { font-size: 15px; }
+.rule .verdict { justify-self: start; font-size: 12px; padding: 4px 10px; }
+
+/* ------------------------------------------------------------------ data structures */
+.ds { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+@media (max-width: 980px) { .ds { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 560px) { .ds { grid-template-columns: 1fr; } }
+.ds-card { background: var(--card); border-radius: 18px; box-shadow: var(--shadow); padding: 12px 12px 20px; display: grid; gap: 10px; align-content: start; }
+.ds-card.wide { grid-column: span 2; }
+@media (max-width: 560px) { .ds-card.wide { grid-column: auto; } }
+.ds-art { background: var(--card-2); border-radius: 12px; height: 118px; display: grid; place-items: center; padding: 12px; }
+.ds-art svg { width: 100%; height: 100%; }
+.ds-card h3 { font-family: var(--sans); font-weight: 600; font-size: 16px; padding: 0 8px; }
+.ds-card p { font-size: 14px; color: var(--text-2); padding: 0 8px; }
+.ds-card code { font-size: 13px; color: var(--text); }
+
+/* ------------------------------------------------------------------ results chart */
+.chart-panel { background: var(--card); border-radius: 22px; box-shadow: var(--shadow); padding: 28px; }
+.chart-head { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; align-items: end; margin-bottom: 18px; }
+.chart-head .serif { font-size: 30px; line-height: 1.1; }
+.chart-head p { font-size: 14px; color: var(--text-3); max-width: 52ch; }
+#strip { width: 100%; height: 300px; }
+.tip { position: absolute; pointer-events: none; background: var(--ink); color: var(--ink-text); font-size: 13px; padding: 8px 10px; border-radius: 10px; max-width: 260px; opacity: 0; transition: opacity .15s; z-index: 5; }
+.limits { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px 32px; margin-top: 28px; }
+@media (max-width: 700px) { .limits { grid-template-columns: 1fr; } }
+.limits p { font-size: 15px; color: var(--text-2); padding-left: 16px; border-left: 2px solid var(--line); }
+
+/* ------------------------------------------------------------------ research */
+.papers { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+@media (max-width: 900px) { .papers { grid-template-columns: 1fr; } }
+.paper { background: var(--card); border-radius: 18px; padding: 24px; box-shadow: var(--shadow); display: grid; gap: 10px; align-content: start; }
+.paper .serif { font-size: 24px; line-height: 1.15; }
+.paper small { font-size: 13px; color: var(--text-3); }
+.paper p { font-size: 14.5px; color: var(--text-2); }
+.paper .use { font-size: 14px; color: var(--text); background: var(--card-2); border-radius: 10px; padding: 10px 12px; }
+
+/* ------------------------------------------------------------------ team + cta + footer */
+.team { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+@media (max-width: 800px) { .team { grid-template-columns: 1fr; } }
+.member { background: var(--card); border-radius: 18px; padding: 24px; box-shadow: var(--shadow); display: flex; gap: 16px; align-items: center; }
+.avatar { width: 54px; height: 54px; border-radius: 50%; display: grid; place-content: center; background: var(--ink); color: var(--ink-text); font-family: var(--serif); font-size: 22px; flex: none; }
+.member b { display: block; font-weight: 600; }
+.member .role { font-size: 14px; color: var(--text-2); }
+.cta { border-radius: 28px; padding: clamp(36px, 6vw, 72px); color: var(--ink-text);
+  background: radial-gradient(60% 80% at 90% 100%, rgba(94,122,105,.8), transparent 70%), linear-gradient(135deg, #23252E, #2E333C 60%, #3A4A42);
+  display: grid; grid-template-columns: 1.2fr 1fr; gap: 32px; align-items: center; }
+@media (max-width: 860px) { .cta { grid-template-columns: 1fr; } }
+.cta .lede { color: var(--ink-text-2); margin-top: 14px; }
+.terminal { background: #15161B; border-radius: 16px; padding: 18px 20px; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 13px; line-height: 1.7; color: #CDD5CF; overflow-x: auto; }
+.terminal .dim { color: #7D857F; }
+.terminal .ok { color: #8FD3A8; }
+footer { background: var(--ink); color: var(--ink-text-2); margin-top: 112px; padding: 64px 0 40px; }
+.foot { display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 32px; }
+@media (max-width: 760px) { .foot { grid-template-columns: 1fr; } }
+.foot h4 { margin: 0 0 12px; font-weight: 500; color: var(--ink-text); font-size: 14px; }
+.foot a { display: block; text-decoration: none; padding: 4px 0; font-size: 14px; }
+.foot a:hover { color: var(--ink-text); }
+.foot-bottom { border-top: 1px solid var(--ink-line); margin-top: 40px; padding-top: 20px; font-size: 13px; display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+
+/* ------------------------------------------------------------------ the one orchestrated entrance */
+.rise { opacity: 0; transform: translateY(14px); animation: rise .9s cubic-bezier(.2,.8,.2,1) forwards; }
+.rise.d1 { animation-delay: .08s; } .rise.d2 { animation-delay: .18s; } .rise.d3 { animation-delay: .3s; } .rise.d4 { animation-delay: .45s; }
+@keyframes rise { to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .rise { animation: none; opacity: 1; transform: none; }
+  *, *::before, *::after { transition: none !important; }
+}
+</style>
+</head>
+<body>
+
+<!-- ================================================================ NAV -->
+<header class="nav">
+  <nav class="nav-bar" aria-label="Main">
+    <a class="brand" href="#top" aria-label="VeriNews home">
+      <svg width="26" height="26" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="9" fill="#5E7A69"/><path d="M8 11h16M8 16h9M8 21h6" stroke="#F3F4F2" stroke-width="2.4" stroke-linecap="round"/><path d="M19 21.5l2.5 2.5L26 19" stroke="#F3F4F2" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      VeriNews
+    </a>
+    <div class="nav-links">
+      <a href="#how">How it works</a>
+      <a href="#demo">Check a headline</a>
+      <a href="#scoring">Scoring</a>
+      <a href="#structures">Data structures</a>
+      <a href="#research">Research</a>
+      <a href="#team">Team</a>
+    </div>
+    <a class="btn btn-light" href="#demo">Check a headline</a>
+  </nav>
+</header>
+
+<main id="top">
+<!-- ================================================================ HERO -->
+<section class="hero">
+  <div class="wrap hero-copy">
+    <h1 class="display rise">Check a headline<br>before you share it.</h1>
+    <p class="lede rise d1">VeriNews searches the latest news the moment you ask, counts how many trusted publishers report the same story, and explains its verdict with a score out of 100.</p>
+    <div class="hero-actions rise d2">
+      <a class="btn btn-light" href="#demo">Check a headline</a>
+      <a class="btn btn-ghost" href="#how">See how it works</a>
+    </div>
+  </div>
+
+  <div class="hero-stage rise d3" aria-label="Example verification report">
+    <div class="device">
+      <div class="screen">
+        <div class="app-top">
+          <svg width="18" height="18" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="9" fill="#5E7A69"/><path d="M8 11h16M8 16h9M8 21h6" stroke="#F3F4F2" stroke-width="2.6" stroke-linecap="round"/></svg>
+          <strong>Verification report</strong>
+          <span class="pill">Live search: 60 reports downloaded</span>
+        </div>
+        <div class="app-body">
+          <div class="app-main">
+            <p class="claim-label">Headline checked</p>
+            <p class="claim-text">19 killed in Kolkata Durga Puja stampede, CM announces ₹25 lakh relief</p>
+            <p class="mini-label">How the score was built</p>
+            <div class="stack" id="hero-stack">
+              <div class="stack-fill"><span class="seg-match"></span><span class="seg-pub"></span><span class="seg-src"></span></div>
+              <span class="stack-tick" style="left:50%"></span><span class="stack-tick" style="left:80%"></span>
+            </div>
+            <div class="stack-scale"><span style="left:0">0</span><span style="left:50%">50</span><span style="left:80%">80</span><span style="left:100%">100</span></div>
+            <div class="legend"><span><i class="seg-match"></i>Keyword match 40</span><span><i class="seg-pub"></i>Trusted publishers 40</span><span><i class="seg-src"></i>Source trust 6</span></div>
+          </div>
+          <div class="app-side">
+            <div style="display:flex;align-items:center;gap:16px">
+              <div class="gauge" id="hero-gauge"></div>
+              <div style="display:grid;gap:8px">
+                <span class="verdict v-ok">Likely verified</span>
+                <span class="result-meta">Newest report 2 hours ago</span>
+              </div>
+            </div>
+            <div>
+              <p class="mini-label">Reported by</p>
+              <div class="chips"><span class="chip">Hindustan Times</span><span class="chip">The Indian Express</span><span class="chip">The Week</span><span class="chip">Onmanorama</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================================================================ APPROACHES STRIP -->
+<section class="strip wrap" aria-label="Detection approaches">
+  <p>Built on three of the four detection approaches described in fake-news research</p>
+  <div class="strip-row">
+    <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M4 5h16v14H4z"/><path d="M8 9h8M8 13h5"/></svg>Known facts</span>
+    <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M12 3l7 4v5c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V7z"/></svg>Source trust</span>
+    <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="11" cy="11" r="6"/><path d="M20 20l-4.5-4.5"/></svg>Live corroboration</span>
+    <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M5 12l4 4 10-10"/></svg>Fact-check search</span>
+  </div>
+</section>
+
+<!-- ================================================================ HOW IT WORKS -->
+<section class="section wrap" id="how">
+  <div class="section-head">
+    <h2 class="h2">From one headline<br>to one clear verdict.</h2>
+    <p class="lede">Every check follows the same six steps, written in C++ with our own data structures.</p>
+  </div>
+  <div class="steps">
+    <article class="step">
+      <div class="step-art"><svg viewBox="0 0 220 100" aria-hidden="true"><rect x="10" y="14" width="200" height="30" rx="8" fill="none" stroke="var(--line)"/><text x="22" y="34" font-size="12" fill="var(--text-2)" font-family="Georgia,serif">19 Killed in Kolkata Stampede…</text><g font-size="11" font-family="system-ui"><rect x="10" y="60" width="38" height="24" rx="12" fill="var(--card)" stroke="var(--line)"/><text x="23" y="76" fill="var(--text)">19</text><rect x="54" y="60" width="52" height="24" rx="12" fill="var(--card)" stroke="var(--line)"/><text x="64" y="76" fill="var(--text)">killed</text><rect x="112" y="60" width="62" height="24" rx="12" fill="var(--card)" stroke="var(--line)"/><text x="121" y="76" fill="var(--text)">kolkata</text><rect x="180" y="60" width="30" height="24" rx="12" fill="var(--card)" stroke="var(--line)"/><text x="189" y="76" fill="var(--text)">…</text></g></svg></div>
+      <p class="step-num">Step 1</p>
+      <h3>Clean the headline</h3>
+      <p>Lowercase, remove punctuation and common words like “the”, keep the keywords.</p>
+    </article>
+    <article class="step">
+      <div class="step-art"><svg viewBox="0 0 220 100" aria-hidden="true"><rect x="10" y="20" width="200" height="60" rx="10" fill="#15161B"/><text x="22" y="44" font-size="11" fill="#8FD3A8" font-family="ui-monospace,Menlo,monospace">$ curl -o feed.xml</text><text x="22" y="62" font-size="11" fill="#B4BAB6" font-family="ui-monospace,Menlo,monospace">news.google.com/rss/…</text></svg></div>
+      <p class="step-num">Step 2</p>
+      <h3>Search the latest news</h3>
+      <p><code>curl</code> downloads Google News results for the keywords, plus a second search for fact-checks.</p>
+    </article>
+    <article class="step">
+      <div class="step-art"><svg viewBox="0 0 220 100" aria-hidden="true"><g font-size="10.5" font-family="system-ui"><rect x="10" y="10" width="200" height="22" rx="6" fill="var(--card)" stroke="var(--line)"/><text x="20" y="25" fill="var(--text)">The Week</text><text x="150" y="25" fill="var(--verified)">trusted</text><rect x="10" y="38" width="200" height="22" rx="6" fill="var(--card)" stroke="var(--line)"/><text x="20" y="53" fill="var(--text)">Oneindia</text><text x="150" y="53" fill="var(--text-3)">unrated</text><rect x="10" y="66" width="200" height="22" rx="6" fill="var(--card)" stroke="var(--line)"/><text x="20" y="81" fill="var(--text)">BOOM</text><text x="150" y="81" fill="var(--suspicious)">fact-check</text></g></svg></div>
+      <p class="step-num">Step 3</p>
+      <h3>Read and label each report</h3>
+      <p>For every article we read the headline, publisher and time, and mark it trusted, unrated or fact-check.</p>
+    </article>
+    <article class="step">
+      <div class="step-art"><svg viewBox="0 0 220 100" aria-hidden="true"><g fill="none" stroke="var(--moss)" stroke-width="1.6"><rect x="12" y="38" width="34" height="24" rx="5"/><rect x="62" y="38" width="34" height="24" rx="5"/><rect x="112" y="38" width="34" height="24" rx="5"/><path d="M46 50h16M96 50h16M146 50h16"/></g><text x="168" y="54" font-size="11" fill="var(--text-3)" font-family="system-ui">NULL</text><g fill="var(--moss)"><circle cx="29" cy="50" r="3"/><circle cx="79" cy="50" r="3"/><circle cx="129" cy="50" r="3"/></g></svg></div>
+      <p class="step-num">Step 4</p>
+      <h3>Store them</h3>
+      <p>Reports go into a linked list, a hash table and a BST, and are saved to a file for offline use.</p>
+    </article>
+    <article class="step">
+      <div class="step-art"><svg viewBox="0 0 220 100" aria-hidden="true"><g font-family="system-ui" font-size="10.5"><text x="12" y="22" fill="var(--text-2)">Hindustan Times</text><rect x="110" y="13" width="96" height="10" rx="5" fill="var(--line)"/><rect x="110" y="13" width="88" height="10" rx="5" fill="var(--moss)"/><text x="12" y="50" fill="var(--text-2)">The Week</text><rect x="110" y="41" width="96" height="10" rx="5" fill="var(--line)"/><rect x="110" y="41" width="70" height="10" rx="5" fill="var(--moss)"/><text x="12" y="78" fill="var(--text-2)">Onmanorama</text><rect x="110" y="69" width="96" height="10" rx="5" fill="var(--line)"/><rect x="110" y="69" width="52" height="10" rx="5" fill="var(--moss)"/></g></svg></div>
+      <p class="step-num">Step 5</p>
+      <h3>Compare and rank</h3>
+      <p>Similarity = 2 × common words ÷ total words. Insertion sort puts the best match first.</p>
+    </article>
+    <article class="step">
+      <div class="step-art"><svg viewBox="0 0 220 100" aria-hidden="true"><circle cx="58" cy="50" r="34" fill="none" stroke="var(--line)" stroke-width="8"/><circle cx="58" cy="50" r="34" fill="none" stroke="var(--verified)" stroke-width="8" stroke-dasharray="183.8 213.6" transform="rotate(-90 58 50)" stroke-linecap="round"/><text x="58" y="57" text-anchor="middle" font-size="22" fill="var(--text)" font-family="Georgia,serif">86</text><rect x="112" y="38" width="96" height="24" rx="12" fill="var(--verified-tint)"/><text x="160" y="54" text-anchor="middle" font-size="11" fill="var(--verified)" font-family="system-ui" font-weight="600">Likely verified</text></svg></div>
+      <p class="step-num">Step 6</p>
+      <h3>Score, apply rules, explain</h3>
+      <p>A score out of 100, nine rules that can override it, and the reason in plain words.</p>
+    </article>
+  </div>
+</section>
+
+<!-- ================================================================ SIGNATURE: reports -> verdict -->
+<section class="section ink" id="reports" aria-labelledby="reports-title">
+  <div class="wrap">
+    <div class="section-head">
+      <h2 class="h2 on-ink" id="reports-title">Dozens of reports.<br>One verdict.</h2>
+      <p class="lede">Each dot is one article downloaded for the Kolkata headline. Drag the slider to watch VeriNews sort them: trusted reports of the same story become the score, everything else falls away.</p>
+    </div>
+    <div class="field-wrap">
+      <canvas id="field" role="img" aria-label="Animation: downloaded reports are sorted into four trusted publishers that report the same story, giving a score of 86"></canvas>
+      <div class="field-stats" aria-live="polite">
+        <div><b id="stat-a">150</b><span id="stat-a-label">reports downloaded from 3 searches</span></div>
+        <div><b>VeriNews</b><span id="stat-b-label">reading every headline</span></div>
+        <div><b id="stat-c">0</b><span id="stat-c-label">trusted publishers so far</span></div>
+      </div>
+    </div>
+    <div class="slider-row">
+      <label for="sortRange">All reports</label>
+      <input class="range" id="sortRange" type="range" min="0" max="1000" value="0" aria-label="Sort the reports">
+      <label for="sortRange">One verdict</label>
+      <button class="btn btn-ghost" id="replay" type="button">Replay</button>
+    </div>
+    <div class="field-legend"><span><i style="background:#A9C2B1"></i>Trusted, same story</span><span><i style="background:#6E7570"></i>Unrated or a different story</span><span><i style="background:#E0897E"></i>Fact-check article</span></div>
+  </div>
+</section>
+
+<!-- ================================================================ DEMO -->
+<section class="section wrap" id="demo">
+  <div class="section-head">
+    <h2 class="h2">Check a headline<br>yourself.</h2>
+    <p class="lede">Paste any headline, even one published a few hours ago. VeriNews searches the latest news and shows how it reached its verdict. Or pick one of the examples.</p>
+  </div>
+  <form class="checker" id="checker" novalidate>
+    <div class="checker-row">
+      <div><label class="field-label" for="claimInput">Headline</label><input class="text-input" id="claimInput" type="text" maxlength="300" autocomplete="off" placeholder="e.g. PM Modi heads to Manila for ASEAN summit"></div>
+      <div><label class="field-label" for="sourceInput">Where you saw it (optional)</label><input class="text-input" id="sourceInput" type="text" list="sourceList" autocomplete="off" placeholder="e.g. WhatsApp Forward"></div>
+      <button class="btn btn-dark" id="checkBtn" type="submit">Check headline</button>
+    </div>
+    <datalist id="sourceList"><option value="WhatsApp Forward"></option><option value="Social Media Post"></option><option value="YouTube Video"></option><option value="The Hindu"></option><option value="NDTV"></option><option value="The Times of India"></option><option value="Hindustan Times"></option><option value="India Today"></option><option value="BBC"></option><option value="Reuters"></option></datalist>
+    <p class="form-error" id="formError" role="alert" hidden></p>
+    <p class="status" id="status"><i></i><span>Checking the connection to the VeriNews program…</span></p>
+  </form>
+  <div class="demo">
+    <div class="demo-list" id="demoList" role="group" aria-label="Example headlines"></div>
+    <div class="result" id="result" aria-live="polite"></div>
+  </div>
+</section>
+
+<!-- ================================================================ SCORING -->
+<section class="section wrap" id="scoring">
+  <div class="section-head">
+    <h2 class="h2">A score you can<br>check by hand.</h2>
+    <p class="lede">Move the sliders to see how each factor changes the score. The rules below can still override it.</p>
+  </div>
+  <div class="calc">
+    <div class="panel">
+      <p class="formula">Score = 40 × keyword match + 40 × trusted publishers + 20 × source trust</p>
+      <div class="control">
+        <div class="control-head"><label for="cSim">Best similarity with a trusted report</label><b id="cSimOut">64%</b></div>
+        <input class="range-light" id="cSim" type="range" min="0" max="100" value="64">
+        <small>60% or more counts as a full match, because publishers word the same story differently.</small>
+      </div>
+      <div class="control">
+        <div class="control-head"><label for="cPub">Different trusted publishers reporting it</label><b id="cPubOut">4</b></div>
+        <input class="range-light" id="cPub" type="range" min="0" max="6" value="4">
+        <small>Three or more gives full marks. Five articles from one publisher still count once.</small>
+      </div>
+      <div class="control">
+        <div class="control-head"><label for="cSrc">Where you saw it</label></div>
+        <select class="select" id="cSrc">
+          <option value="30">Not given (counts as 30)</option>
+          <option value="10">WhatsApp forward (10)</option>
+          <option value="30">YouTube video (30)</option>
+          <option value="80">NDTV (80)</option>
+          <option value="90">The Hindu (90)</option>
+        </select>
+      </div>
+    </div>
+    <div class="panel" style="display:grid;gap:20px;align-content:start">
+      <div style="display:flex;gap:20px;align-items:center;flex-wrap:wrap">
+        <div class="gauge" id="calcGauge"></div>
+        <div style="display:grid;gap:8px"><span class="verdict" id="calcVerdict"></span><span class="result-meta" id="calcMeta"></span></div>
+      </div>
+      <div>
+        <div class="stack" id="calcStack">
+          <div class="stack-fill"><span class="seg-match"></span><span class="seg-pub"></span><span class="seg-src"></span></div>
+          <span class="stack-tick" style="left:50%"></span><span class="stack-tick" style="left:80%"></span>
+        </div>
+        <div class="stack-scale"><span style="left:0">0</span><span style="left:50%">50</span><span style="left:80%">80</span><span style="left:100%">100</span></div>
+        <div class="legend" id="calcLegend"></div>
+      </div>
+      <div class="bands"><div class="b1">Below 50: potentially suspicious</div><div class="b2">50–79: needs verification</div><div class="b3">80+: likely verified</div></div>
+    </div>
+  </div>
+
+  <h3 class="h2" style="font-size:clamp(28px,3.4vw,40px);text-align:center;margin:96px 0 28px">Nine rules, checked in order.</h3>
+  <div class="rules" id="rules"></div>
+</section>
+
+<!-- ================================================================ DATA STRUCTURES -->
+<section class="section wrap" id="structures" style="padding-top:0">
+  <div class="section-head">
+    <h2 class="h2">The data structures<br>behind every check.</h2>
+    <p class="lede">Each one does one job. All of them are written by hand in C++.</p>
+  </div>
+  <div class="ds">
+    <article class="ds-card wide">
+      <div class="ds-art"><svg viewBox="0 0 440 100" aria-hidden="true"><g font-family="system-ui" font-size="11"><g fill="var(--card)" stroke="var(--line)"><rect x="10" y="8" width="44" height="18" rx="4"/><rect x="10" y="30" width="44" height="18" rx="4"/><rect x="10" y="52" width="44" height="18" rx="4"/><rect x="10" y="74" width="44" height="18" rx="4"/></g><text x="22" y="21" fill="var(--text-3)">33</text><text x="22" y="43" fill="var(--text-3)">34</text><text x="22" y="65" fill="var(--text-3)">35</text><text x="22" y="87" fill="var(--text-3)">36</text><g fill="none" stroke="var(--moss)" stroke-width="1.4"><path d="M54 39h26M164 39h26M54 83h26"/></g><g fill="var(--card)" stroke="var(--moss)"><rect x="80" y="30" width="84" height="18" rx="9"/><rect x="190" y="30" width="84" height="18" rx="9"/><rect x="80" y="74" width="84" height="18" rx="9"/></g><text x="92" y="43" fill="var(--text)">"note" → 6</text><text x="202" y="43" fill="var(--text)">"tone" → 9</text><text x="92" y="87" fill="var(--text)">"moon" → 1</text><text x="290" y="43" fill="var(--text-3)">collision: same bucket</text></g></svg></div>
+      <h3>Hash table</h3>
+      <p>An array of 101 linked lists. A word's bucket is the sum of its letters' ASCII codes <code>% 101</code>, so finding the reports that contain a word means searching one short list.</p>
+    </article>
+    <article class="ds-card">
+      <div class="ds-art"><svg viewBox="0 0 200 100" aria-hidden="true"><g fill="var(--card)" stroke="var(--moss)"><rect x="6" y="38" width="44" height="24" rx="6"/><rect x="74" y="38" width="44" height="24" rx="6"/><rect x="142" y="38" width="44" height="24" rx="6"/></g><g stroke="var(--moss)" fill="none" stroke-width="1.4"><path d="M50 50h24M118 50h24"/></g><g fill="var(--moss)"><circle cx="28" cy="50" r="3"/><circle cx="96" cy="50" r="3"/><circle cx="164" cy="50" r="3"/></g></svg></div>
+      <h3>Linked list</h3>
+      <p>Stores every news record. It grows one node at a time as reports are downloaded.</p>
+    </article>
+    <article class="ds-card">
+      <div class="ds-art"><svg viewBox="0 0 200 100" aria-hidden="true"><g stroke="var(--moss)" stroke-width="1.4"><path d="M100 20L55 52M100 20l45 32M55 52L33 84M55 52l22 32"/></g><g fill="var(--card)" stroke="var(--moss)"><circle cx="100" cy="20" r="12"/><circle cx="55" cy="52" r="12"/><circle cx="145" cy="52" r="12"/><circle cx="33" cy="84" r="10"/><circle cx="77" cy="84" r="10"/></g></svg></div>
+      <h3>Binary search tree</h3>
+      <p>Orders news by date. Reading it left, node, right lists them from oldest to newest.</p>
+    </article>
+    <article class="ds-card">
+      <div class="ds-art"><svg viewBox="0 0 200 100" aria-hidden="true"><g fill="var(--card)" stroke="var(--moss)"><rect x="60" y="64" width="80" height="18" rx="5"/><rect x="60" y="42" width="80" height="18" rx="5"/><rect x="60" y="20" width="80" height="18" rx="5" fill="var(--moss)"/></g><text x="150" y="33" font-size="11" fill="var(--text-3)" font-family="system-ui">newest</text></svg></div>
+      <h3>Stack</h3>
+      <p>Recent checks, newest first: last in, first out.</p>
+    </article>
+    <article class="ds-card">
+      <div class="ds-art"><svg viewBox="0 0 200 100" aria-hidden="true"><g fill="var(--card)" stroke="var(--moss)"><rect x="20" y="40" width="30" height="22" rx="5" fill="var(--moss)"/><rect x="54" y="40" width="30" height="22" rx="5"/><rect x="88" y="40" width="30" height="22" rx="5"/><rect x="122" y="40" width="30" height="22" rx="5"/></g><path d="M152 72c30 18-140 18-120 0" fill="none" stroke="var(--moss)" stroke-dasharray="3 3"/><text x="18" y="32" font-size="11" fill="var(--text-3)" font-family="system-ui">front</text></svg></div>
+      <h3>Circular queue</h3>
+      <p>Checks many headlines in the order they were typed: first in, first out.</p>
+    </article>
+    <article class="ds-card wide">
+      <div class="ds-art"><svg viewBox="0 0 200 100" aria-hidden="true"><g fill="var(--moss)"><rect x="30" y="20" width="22" height="64" rx="4"/><rect x="62" y="36" width="22" height="48" rx="4" opacity=".8"/><rect x="94" y="50" width="22" height="34" rx="4" opacity=".6"/><rect x="126" y="62" width="22" height="22" rx="4" opacity=".4"/></g></svg></div>
+      <h3>Insertion sort and linear search</h3>
+      <p>Sort ranks the matching reports, best first. Linear search finds a publisher's rating and avoids saving an article twice.</p>
+    </article>
+  </div>
+</section>
+
+<!-- ================================================================ RESULTS -->
+<section class="section wrap" id="results" style="padding-top:0">
+  <div class="chart-panel" style="position:relative">
+    <div class="chart-head">
+      <div>
+        <p class="serif">Scores of our 20 test headlines</p>
+      </div>
+      <p>Each dot is one headline from <code>test_cases.txt</code>, checked against the stored news without internet. Colour shows the answer we expected. All 20 matched, but we wrote these tests ourselves, so live checks with new headlines are the real test.</p>
+    </div>
+    <svg id="strip" role="img" aria-label="Strip chart of 20 test headline scores from 0 to 100, grouped by expected verdict"></svg>
+    <div class="tip" id="tip"></div>
+    <div class="limits">
+      <p>It gives an evidence-based credibility score. It does not prove that something is true.</p>
+      <p>It needs the internet and depends on Google News. News only minutes old may not be found yet.</p>
+      <p>Small local news, reported only by local papers, may get “needs verification”.</p>
+      <p>A fake that changes only a number (“25 killed” instead of “19”) can fool word matching.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ================================================================ RESEARCH -->
+<section class="section wrap" id="research" style="padding-top:0">
+  <div class="section-head">
+    <h2 class="h2">Grounded in<br>published research.</h2>
+    <p class="lede">We read these papers before designing VeriNews, and each one shaped a part of it.</p>
+  </div>
+  <div class="papers">
+    <article class="paper">
+      <small>Ahmed et al., 2021</small>
+      <p class="serif">Detecting Fake News using Machine Learning: A Systematic Literature Review</p>
+      <p>Reviews 26 studies and the standard steps: remove stop words, stem, split, train, measure.</p>
+      <p class="use">We use the same text cleaning: lowercase, stop words, plural removal.</p>
+    </article>
+    <article class="paper">
+      <small>Fedushko, Syerov and Kryvinska, 2024</small>
+      <p class="serif">AntiFake System: Machine Learning-Based System for Verification of Fake News</p>
+      <p>Classifies articles from their text and suggests searching for known false statements.</p>
+      <p class="use">Our fact-check search and stored fake stories follow that suggestion.</p>
+    </article>
+    <article class="paper">
+      <small>Tanaja et al., 2025</small>
+      <p class="serif">Integrating FakeBERT Classification, Style Analysis, and Credibility Verification</p>
+      <p>Compares a claim with related news scraped from trusted outlets.</p>
+      <p class="use">Our live search compares each headline with today's reports from trusted publishers.</p>
+    </article>
+  </div>
+</section>
+
+<!-- ================================================================ TEAM -->
+<section class="section wrap" id="team" style="padding-top:0">
+  <div class="section-head">
+    <h2 class="h2">Team ByteForce</h2>
+    <p class="lede">DS with C (TCS-302) and OOPS with C++ (TCS-307), Graphic Era University.</p>
+  </div>
+  <div class="team">
+    <div class="member"><span class="avatar" aria-hidden="true">S</span><div><b>Shambhavi Srivastava</b><span class="role">Team lead: planning, design, coordination</span></div></div>
+    <div class="member"><span class="avatar" aria-hidden="true">A</span><div><b>Abhinav Panwar</b><span class="role">C++, data structures, development</span></div></div>
+    <div class="member"><span class="avatar" aria-hidden="true">A</span><div><b>Akshat Sharma</b><span class="role">Testing, documentation, metrics</span></div></div>
+  </div>
+
+  <div class="cta" style="margin-top:96px">
+    <div>
+      <h2 class="h2 on-ink">Run it on your<br>own computer.</h2>
+      <p class="lede">Download the code, double-click <code>run.bat</code>, choose option 1 and paste any headline. Option 9 tests the internet connection first.</p>
+      <div class="hero-actions" style="justify-content:flex-start;margin-top:22px">
+        <a class="btn btn-light" href="https://github.com/AbhinavPanwar5099/VeriNews" target="_blank" rel="noopener">View the code on GitHub</a>
+      </div>
+    </div>
+    <div class="terminal" aria-label="Example console output">
+      <div class="dim">Headline: 19 Killed in Kolkata Durga Puja Stampede…</div>
+      <div class="dim">Searching the latest news online...</div>
+      <div>Online   : 60 reports downloaded</div>
+      <div>Keyword match      1.00 x 40 = 40.00</div>
+      <div>Trusted publishers 1.00 x 40 = 40.00</div>
+      <div>Source trust       0.30 x 20 =  6.00</div>
+      <div>SCORE   : 86.00 / 100</div>
+      <div class="ok">VERDICT : LIKELY VERIFIED</div>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="foot">
+      <div>
+        <a class="brand" href="#top" style="color:var(--ink-text);display:inline-flex">
+          <svg width="24" height="24" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="9" fill="#5E7A69"/><path d="M8 11h16M8 16h9M8 21h6" stroke="#F3F4F2" stroke-width="2.4" stroke-linecap="round"/></svg>
+          VeriNews
+        </a>
+        <p style="margin-top:12px;font-size:14px;max-width:36ch">A student project that gives a preliminary, explainable credibility check. It is not a final fact-check.</p>
+      </div>
+      <div><h4>Project</h4><a href="#how">How it works</a><a href="#scoring">Scoring</a><a href="#structures">Data structures</a><a href="#results">Results</a></div>
+      <div><h4>Links</h4><a href="https://github.com/AbhinavPanwar5099/VeriNews" target="_blank" rel="noopener">GitHub repository</a><a href="#research">Research</a><a href="#team">Team</a></div>
+    </div>
+    <div class="foot-bottom"><span>Team ByteForce, Graphic Era University, 2026</span><span>Example results on this page come from our own tests.</span></div>
+  </div>
+</footer>
+
+<script>
+"use strict";
+/* ================================================================ data
+   EXAMPLES: replace these with results from your own live tests.
+   Each factor value is between 0 and 1; points = value x weight.          */
+const EXAMPLES = [
+  { headline: "19 killed in Kolkata Durga Puja stampede, CM announces ₹25 lakh relief", kind: "True story, reported today",
+    source: "Not given", match: 1.0, pubs: 4, src: 0.30, cap: null, verdict: "ok",
+    publishers: ["Hindustan Times", "The Indian Express", "The Week", "Onmanorama"], newest: "2 hours ago",
+    reason: "Four different trusted publishers report the same story in the last few hours." },
+  { headline: "Chandrayaan-3 lands on the Moon", kind: "True story, seen on WhatsApp",
+    source: "WhatsApp Forward", match: 1.0, pubs: 3, src: 0.10, cap: null, verdict: "ok",
+    publishers: ["NDTV", "The Hindu", "Reuters"], newest: null,
+    reason: "Three trusted publishers confirm it. The evidence matters more than where you saw it." },
+  { headline: "RBI to ban 500 rupee notes from next month", kind: "Fake claim with a fact-check",
+    source: "Not given", match: 0, pubs: 0, src: 0.30, cap: 6, verdict: "bad", rule: 5,
+    publishers: [], newest: null,
+    reason: "Rule 5: a fact-check article (India Today) is the closest match, and no trusted publisher reports the claim." },
+  { headline: "India lose T20 World Cup final to South Africa", kind: "Fake that flips a true story",
+    source: "Not given", match: 1.0, pubs: 3, src: 0.30, cap: 30, verdict: "bad", rule: 4,
+    publishers: ["The Hindu", "BBC", "NDTV"], newest: null,
+    reason: "Rule 4: trusted reports about this story say the opposite. The claim says “lose”, the reports say “win”." },
+  { headline: "Aliens land in Delhi, army on high alert", kind: "Invented claim nobody reports",
+    source: "Not given", match: 0, pubs: 0, src: 0.30, cap: 6, verdict: "bad", rule: 7,
+    publishers: [], newest: null,
+    reason: "Rule 7: we searched the latest news and no publisher reports this." },
+  { headline: "Dehradun gets new parking lot near clock tower", kind: "Small local news",
+    source: "Not given", match: 0, pubs: 0, src: 0.30, cap: 6, verdict: "needs", rule: 6,
+    publishers: [], newest: null,
+    reason: "Rule 6: only a smaller, unrated local publisher reports it." }
+];
+
+const RULES = [
+  ["Fewer than 2 useful words in the headline", "needs"],
+  ["Contains “not” or “fake” and matches a story: we cannot tell if it agrees or disagrees", "needs"],
+  ["Matches a story we stored as proved false", "bad"],
+  ["Trusted reports say the opposite (“lose” where reports say “win”)", "bad"],
+  ["A fact-check article is the closest match, or fewer than 2 trusted publishers report it", "bad"],
+  ["Only smaller, unrated publishers report it", "needs"],
+  ["The search worked, but no publisher reports it", "bad"],
+  ["No internet and no stored support: suspicious only if the source is unreliable", "needs"],
+  ["A low score only because of different wording", "needs"]
+];
+
+/* Real output of menu option 8 (test_cases.txt, stored news only). */
+const TESTS = [
+  ["ISRO's Chandrayaan-3 lands near the Moon's south pole", "ok", 98.0],
+  ["RBI withdraws 2000 rupee notes from circulation", "ok", 97.6],
+  ["Neeraj Chopra wins gold medal in javelin at Tokyo Olympics", "ok", 82.7],
+  ["India wins T20 World Cup final against South Africa", "ok", 82.3],
+  ["WHO declares COVID-19 a pandemic", "ok", 84.7],
+  ["Gukesh becomes youngest world chess champion", "ok", 84.7],
+  ["RBI withdraws 2000 rupee notes (from WhatsApp)", "ok", 82.0],
+  ["Chandrayaan-3 lands on the Moon", "ok", 86.0],
+  ["ISRO launches a mission to study the Sun", "needs", 63.4],
+  ["Gukesh wins world chess championship (from WhatsApp)", "needs", 68.7],
+  ["Scientists discover water on the surface of Mars", "needs", 18.4],
+  ["New metro line opens in the city next month", "needs", 6.0],
+  ["5G towers do not spread coronavirus", "needs", 19.0],
+  ["New 1000 rupee note to be introduced", "needs", 67.0],
+  ["5G towers spread coronavirus", "bad", 2.0],
+  ["Hot water kills coronavirus every 15 minutes", "bad", 4.0],
+  ["New 2000 rupee notes have a GPS chip", "bad", 30.0],
+  ["NASA says Earth will go dark for six days", "bad", 6.0],
+  ["UNESCO declares Jana Gana Mana best anthem", "bad", 2.0],
+  ["Aliens land in Paris tonight", "bad", 2.0]
+];
+
+const VERDICT = {
+  ok: { label: "Likely verified", cls: "v-ok", color: "var(--verified)" },
+  needs: { label: "Needs further verification", cls: "v-needs", color: "var(--needs)" },
+  bad: { label: "Potentially suspicious", cls: "v-bad", color: "var(--suspicious)" }
+};
+const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+
+/* ================================================================ shared widgets */
+function gaugeSVG() {
+  return '<svg viewBox="0 0 120 120" aria-hidden="true"><circle class="track" cx="60" cy="60" r="50" fill="none" stroke-width="10"/>' +
+         '<circle class="value" cx="60" cy="60" r="50" fill="none" stroke-width="10" stroke-linecap="round" stroke-dasharray="314.16" stroke-dashoffset="314.16"/></svg>' +
+         '<div class="gauge-num"><b>0</b><span>out of 100</span></div>';
+}
+function setGauge(el, score, verdict) {
+  if (!el.querySelector("svg")) el.innerHTML = gaugeSVG();
+  const v = el.querySelector(".value");
+  v.style.stroke = VERDICT[verdict].color;
+  requestAnimationFrame(() => { v.style.strokeDashoffset = String(314.16 * (1 - Math.max(0, Math.min(100, score)) / 100)); });
+  countTo(el.querySelector(".gauge-num b"), score);
+  el.setAttribute("role", "img");
+  el.setAttribute("aria-label", "Score " + score.toFixed(1) + " out of 100");
+}
+function countTo(node, target) {
+  const start = parseFloat(node.textContent) || 0;
+  if (reduce) { node.textContent = fmt(target); return; }
+  const t0 = performance.now(), dur = 900;
+  function tick(now) {
+    const k = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - k, 3);
+    node.textContent = fmt(start + (target - start) * e);
+    if (k < 1) requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+}
+const fmt = n => (Math.round(n * 10) / 10).toString();
+function setStack(el, m, p, s, cap) {
+  const spans = el.querySelectorAll(".stack-fill span");
+  requestAnimationFrame(() => {
+    spans[0].style.width = m + "%"; spans[1].style.width = p + "%"; spans[2].style.width = s + "%";
+  });
+  el.classList.toggle("capped", cap != null && cap < m + p + s - 0.05);
+  let capEl = el.querySelector(".stack-cap");
+  if (cap != null && cap < m + p + s - 0.05) {
+    if (!capEl) { capEl = document.createElement("span"); capEl.className = "stack-cap"; capEl.style.left = "0%"; el.appendChild(capEl); }
+    requestAnimationFrame(() => { capEl.style.left = cap + "%"; });
+  } else if (capEl) capEl.remove();
+}
+
+/* ================================================================ hero */
+setGauge($("#hero-gauge"), 86, "ok");
+setTimeout(() => setStack($("#hero-stack"), 40, 40, 6, null), reduce ? 0 : 500);
+
+/* ================================================================ demo + live check
+   showResult() draws one report. It is used for the examples and for a live check.
+   d: headline, kind, verdict (ok/needs/bad), match, support, pubs, src, source,
+      raw, final, publishers, newest, reason                                      */
+function showResult(d) {
+  const m = d.match * 40, p = d.support * 40, s = d.src * 20;
+  const raw = d.raw, final = d.final;
+  const V = VERDICT[d.verdict];
+  const rows = [
+    ["Keyword match", d.match, 40, "var(--moss)"],
+    ["Trusted publishers (" + d.pubs + ")", d.support, 40, "#7A9A86"],
+    ["Source trust (" + esc(d.source || "Not given") + ")", d.src, 20, "#B9CDBF"]
+  ];
+  $("#result").innerHTML =
+    '<div class="result-top"><div class="gauge" id="demoGauge"></div><div>' +
+      '<span class="verdict ' + V.cls + '">' + V.label + '</span>' +
+      '<p class="claim-text">' + esc(d.headline) + '</p>' +
+      '<p class="result-meta">' + esc(d.kind) + (d.newest ? ", newest report " + esc(d.newest) : "") + '</p></div></div>' +
+    '<div class="result-block"><h3>How the score was built</h3>' +
+      '<div class="stack" id="demoStack"><div class="stack-fill"><span class="seg-match"></span><span class="seg-pub"></span><span class="seg-src"></span></div>' +
+      '<span class="stack-tick" style="left:50%"></span><span class="stack-tick" style="left:80%"></span></div>' +
+      '<div class="stack-scale"><span style="left:0">0</span><span style="left:50%">50</span><span style="left:80%">80</span><span style="left:100%">100</span></div>' +
+      rows.map(r => '<div class="factor"><span>' + r[0] + '</span><b>' + (r[1] * r[2]).toFixed(1) + ' / ' + r[2] + '</b>' +
+        '<div class="factor-bar"><span data-w="' + (r[1] * 100) + '" style="background:' + r[3] + '"></span></div></div>').join("") +
+      (raw > final + 0.05 ? '<p class="result-meta">The factors add up to ' + fmt(raw) + ', but a rule caps the score at ' + fmt(final) + '.</p>' : '') +
+    '</div>' +
+    '<div class="result-block"><h3>Why this verdict</h3><p class="reason">' + esc(d.reason) + '</p></div>' +
+    (d.publishers.length ? '<div class="result-block"><h3>Reported by</h3><div class="chips">' +
+      d.publishers.map(n => '<span class="chip">' + esc(n) + '</span>').join("") + '</div></div>' : '') +
+    (d.note ? '<div class="result-block"><h3>Note</h3><p class="reason">' + esc(d.note) + '</p></div>' : '');
+  setGauge($("#demoGauge"), final, d.verdict);
+  setStack($("#demoStack"), m, p, s, raw > final + 0.05 ? final : null);
+  requestAnimationFrame(() => document.querySelectorAll("#result .factor-bar span").forEach(b => { b.style.width = b.dataset.w + "%"; }));
+}
+
+function renderDemo(i) {
+  const d = EXAMPLES[i];
+  const support = Math.min(d.pubs, 3) / 3;
+  const raw = Math.round((d.match * 40 + support * 40 + d.src * 20) * 10) / 10;
+  showResult({ headline: d.headline, kind: d.kind, verdict: d.verdict, match: d.match, support: support, pubs: d.pubs,
+    src: d.src, source: d.source, raw: raw, final: d.cap != null ? Math.min(raw, d.cap) : raw,
+    publishers: d.publishers, newest: d.newest, reason: d.reason });
+  document.querySelectorAll(".demo-item").forEach((b, k) => b.setAttribute("aria-pressed", String(k === i)));
+}
+
+/* Live check: the page talks to the VeriNews C++ program (menu option 10 or web.bat),
+   which serves this page at http://localhost:8080 and answers POST /api/check. */
+let connected = false;
+const onLocalServer = /^https?:$/.test(location.protocol) && (location.hostname === "localhost" || location.hostname === "127.0.0.1");
+function setStatus(kind, html) {
+  const el = $("#status");
+  el.className = "status " + kind;
+  el.querySelector("span").innerHTML = html;
+}
+const OFFLINE_HELP = "Live checking needs the VeriNews program. Double-click <code>web.bat</code> (or choose option 10 in the program), then open <code>http://localhost:8080</code>.";
+if (onLocalServer) {
+  fetch("/api/ping", { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => {
+    connected = !!(j && j.ok);
+    setStatus(connected ? "on" : "off", connected ? "Connected to the VeriNews program. Checks search Google News live." : OFFLINE_HELP);
+  }).catch(() => setStatus("off", OFFLINE_HELP));
+} else {
+  setStatus("off", OFFLINE_HELP);
+}
+const VERDICT_KEY = { "LIKELY VERIFIED": "ok", "NEEDS FURTHER VERIFICATION": "needs", "POTENTIALLY SUSPICIOUS": "bad" };
+const DEFAULT_REASON = { ok: "Enough trusted publishers report the same story.", needs: "The evidence is not strong enough either way.", bad: "The score is below 50." };
+$("#checker").addEventListener("submit", async e => {
+  e.preventDefault();
+  const claim = $("#claimInput").value.trim(), source = $("#sourceInput").value.trim();
+  const err = $("#formError");
+  err.hidden = true;
+  if (claim.length < 10) { err.textContent = "Type a headline of at least 10 characters."; err.hidden = false; $("#claimInput").focus(); return; }
+  if (!connected) { err.innerHTML = OFFLINE_HELP; err.hidden = false; return; }
+  const btn = $("#checkBtn");
+  btn.disabled = true; btn.textContent = "Checking…";
+  document.querySelectorAll(".demo-item").forEach(b => b.setAttribute("aria-pressed", "false"));
+  $("#result").innerHTML = '<div class="loading"><div class="spinner" aria-hidden="true"></div><p>Searching the latest news on Google News. This can take up to a minute.</p></div>';
+  $("#result").scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "nearest" });
+  try {
+    const res = await fetch("/api/check", { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({ claim: claim, source: source }) });
+    const r = await res.json();
+    if (!res.ok || r.error) throw new Error(r.error || "The program could not check this headline.");
+    const key = VERDICT_KEY[r.verdict] || "needs";
+    showResult({ headline: r.claim, verdict: key, match: r.match, support: r.support, pubs: r.publisherCount, src: r.sourceValue,
+      source: r.source, raw: r.rawScore, final: r.score, publishers: r.publishers,
+      kind: r.liveFound >= 0 ? r.liveFound + " reports downloaded from Google News" : "No internet: checked stored news only",
+      newest: r.newestHours >= 0 ? Math.round(r.newestHours) + " hours ago" : null,
+      reason: r.reason || DEFAULT_REASON[key], note: r.note });
+  } catch (ex) {
+    $("#result").innerHTML = '<div class="loading"><p>' + esc(ex.message === "Failed to fetch" ? "The VeriNews program stopped. Start it again with web.bat." : ex.message) + '</p></div>';
+  } finally {
+    btn.disabled = false; btn.textContent = "Check headline";
+  }
+});
+$("#demoList").innerHTML = EXAMPLES.map((d, i) =>
+  '<button class="demo-item" type="button" data-i="' + i + '" aria-pressed="false"><span class="t">' + esc(d.headline) + '</span><span class="k">' + esc(d.kind) + '</span></button>').join("") +
+  '<p class="demo-note">Examples from our tests. Type your own headline above to check it live.</p>';
+$("#demoList").addEventListener("click", e => { const b = e.target.closest(".demo-item"); if (b) renderDemo(Number(b.dataset.i)); });
+renderDemo(0);
+
+/* ================================================================ calculator */
+function calc() {
+  const sim = Number($("#cSim").value), pubs = Number($("#cPub").value), src = Number($("#cSrc").value) / 100;
+  const matchV = sim >= 60 ? 1 : sim / 60;
+  const m = 40 * matchV, p = 40 * Math.min(pubs, 3) / 3, s = 20 * src;
+  const score = Math.round((m + p + s) * 10) / 10;
+  const v = score >= 80 ? "ok" : score >= 50 ? "needs" : "bad";
+  $("#cSimOut").textContent = sim + "%";
+  $("#cPubOut").textContent = pubs;
+  setGauge($("#calcGauge"), score, v);
+  const V = VERDICT[v];
+  const verdictEl = $("#calcVerdict");
+  verdictEl.className = "verdict " + V.cls;
+  verdictEl.textContent = V.label;
+  $("#calcMeta").textContent = "Score from the factors alone, before the rules";
+  setStack($("#calcStack"), m, p, s, null);
+  $("#calcLegend").innerHTML = '<span><i class="seg-match"></i>Keyword match ' + m.toFixed(1) + '</span><span><i class="seg-pub"></i>Trusted publishers ' + p.toFixed(1) +
+    '</span><span><i class="seg-src"></i>Source trust ' + s.toFixed(1) + '</span>';
+}
+["#cSim", "#cPub", "#cSrc"].forEach(id => $(id).addEventListener("input", calc));
+calc();
+
+/* ================================================================ rules */
+$("#rules").innerHTML = RULES.map((r, i) =>
+  '<div class="rule"><span class="rule-n">Rule ' + (i + 1) + '</span><p>' + r[0] + '</p><span class="verdict ' + VERDICT[r[1]].cls + '">' + VERDICT[r[1]].label + '</span></div>').join("");
+
+/* ================================================================ results strip chart */
+(function strip() {
+  const svg = $("#strip"), tip = $("#tip");
+  const NS = "http://www.w3.org/2000/svg";
+  const groups = [["ok", "Expected: likely verified"], ["needs", "Expected: needs verification"], ["bad", "Expected: suspicious"]];
+  function draw() {
+    const W = svg.clientWidth || 800, H = 300, left = Math.min(200, W * 0.32), right = 16, top = 26, bottom = 34;
+    const x = v => left + (W - left - right) * v / 100;
+    svg.setAttribute("viewBox", "0 0 " + W + " " + H);
+    svg.innerHTML = "";
+    const add = (tag, attrs, text) => { const n = document.createElementNS(NS, tag); for (const k in attrs) n.setAttribute(k, attrs[k]); if (text != null) n.textContent = text; svg.appendChild(n); return n; };
+    // verdict bands
+    [[0, 50, "var(--suspicious)"], [50, 80, "var(--needs)"], [80, 100, "var(--verified)"]].forEach(b =>
+      add("rect", { x: x(b[0]), y: top - 14, width: x(b[1]) - x(b[0]) - 2, height: 4, rx: 2, fill: b[2], opacity: .8 }));
+    [0, 50, 80, 100].forEach(t => {
+      add("line", { x1: x(t), x2: x(t), y1: top - 6, y2: H - bottom, stroke: "var(--line)", "stroke-dasharray": t % 100 ? "4 4" : "0" });
+      add("text", { x: x(t), y: H - 12, "text-anchor": "middle", "font-size": 12, fill: "var(--text-3)", "font-family": "var(--sans)" }, String(t));
+    });
+    const rowH = (H - top - bottom) / 3;
+    groups.forEach((g, gi) => {
+      const cy = top + rowH * gi + rowH / 2;
+      add("text", { x: 0, y: cy + 4, "font-size": W < 520 ? 11 : 13, fill: "var(--text-2)", "font-family": "var(--sans)" }, W < 520 ? VERDICT[g[0]].label : g[1]);
+      const pts = TESTS.filter(t => t[1] === g[0]);
+      pts.forEach((t, k) => {
+        const jitter = ((k * 37) % 7 - 3) * 4;
+        const c = add("circle", { cx: x(t[2]), cy: cy + jitter, r: 0, fill: VERDICT[g[0]].color, stroke: "var(--card)", "stroke-width": 2, tabindex: 0 });
+        c.style.transition = reduce ? "none" : "r .5s cubic-bezier(.2,.8,.2,1) " + (gi * 120 + k * 40) + "ms";
+        requestAnimationFrame(() => c.setAttribute("r", 8));
+        c.setAttribute("r", reduce ? 8 : 0);
+        if (!reduce) setTimeout(() => c.setAttribute("r", 8), 30);
+        const show = () => {
+          tip.textContent = t[0] + ": " + t[2].toFixed(1);
+          const r = svg.getBoundingClientRect(), pr = svg.parentElement.getBoundingClientRect();
+          tip.style.left = Math.min(r.left - pr.left + x(t[2]) + 12, pr.width - 270) + "px";
+          tip.style.top = (r.top - pr.top + cy + jitter - 44) + "px";
+          tip.style.opacity = 1;
+        };
+        c.addEventListener("mouseenter", show); c.addEventListener("focus", show);
+        c.addEventListener("mouseleave", () => tip.style.opacity = 0); c.addEventListener("blur", () => tip.style.opacity = 0);
+        add("title", {}, t[0] + ": " + t[2].toFixed(1));
+      });
+    });
+  }
+  let drawn = false;
+  const io = new IntersectionObserver(es => { if (es[0].isIntersecting && !drawn) { drawn = true; draw(); } }, { threshold: .3 });
+  io.observe(svg);
+  window.addEventListener("resize", () => { if (drawn) draw(); });
+})();
+
+/* ================================================================ signature animation: reports -> verdict */
+(function field() {
+  const canvas = $("#field"), ctx = canvas.getContext("2d");
+  const range = $("#sortRange");
+  const PUBS = ["Hindustan Times", "Indian Express", "The Week", "Onmanorama"];
+  // 150 reports: 16 trusted & same story (4 per publisher), 120 unrated/other story, 14 fact-checks
+  let dots = [];
+  let seed = 7;
+  const rnd = () => { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; };
+  for (let i = 0; i < 150; i++) {
+    const type = i < 16 ? 0 : i < 136 ? 1 : 2;
+    dots.push({ type, pub: i < 16 ? i % 4 : -1, slot: i < 16 ? Math.floor(i / 4) : i, sx: rnd(), sy: rnd(), ph: rnd() * Math.PI * 2, sp: .4 + rnd() * .8 });
+  }
+  let W = 0, H = 0, dpr = 1, value = 0, target = 0, touched = false, visible = false, raf = 0, autoplayed = false;
+  function size() {
+    dpr = Math.min(2, window.devicePixelRatio || 1);
+    W = canvas.clientWidth; H = canvas.clientHeight;
+    canvas.width = W * dpr; canvas.height = H * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+  const ease = t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+  function frame(now) {
+    value += (target - value) * (reduce ? 1 : 0.08);
+    const t = ease(Math.max(0, Math.min(1, value)));
+    const time = now / 1000;
+    ctx.clearRect(0, 0, W, H);
+    const cx = W * 0.5, cy = H * 0.48;
+    const narrow = W < 640;
+    // bar area on the right
+    const barX0 = narrow ? W * 0.56 : W * 0.66, barW = narrow ? W * 0.4 : W * 0.3, colW = barW / 4, base = H * 0.78;
+    // centre node
+    const ringR = narrow ? 34 : 46;
+    ctx.save();
+    const glow = ctx.createRadialGradient(cx, cy, 0, cx, cy, ringR * 3);
+    glow.addColorStop(0, "rgba(169,194,177,.22)"); glow.addColorStop(1, "rgba(169,194,177,0)");
+    ctx.fillStyle = glow; ctx.beginPath(); ctx.arc(cx, cy, ringR * 3, 0, Math.PI * 2); ctx.fill();
+    ctx.lineWidth = narrow ? 6 : 8; ctx.strokeStyle = "rgba(238,240,238,.12)";
+    ctx.beginPath(); ctx.arc(cx, cy, ringR, 0, Math.PI * 2); ctx.stroke();
+    ctx.strokeStyle = "#A9C2B1"; ctx.lineCap = "round";
+    ctx.beginPath(); ctx.arc(cx, cy, ringR, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * 0.86 * t); if (t > 0.01) ctx.stroke();
+    ctx.fillStyle = "#EEF0EE"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.font = (narrow ? 22 : 30) + "px 'Instrument Serif', Georgia, serif";
+    ctx.fillText(String(Math.round(86 * t)), cx, cy);
+    ctx.restore();
+    // publisher labels
+    ctx.font = (narrow ? 10 : 12) + "px Geist, system-ui, sans-serif";
+    ctx.textAlign = "center"; ctx.textBaseline = "top";
+    PUBS.forEach((p, k) => {
+      ctx.fillStyle = "rgba(180,186,182," + (t * 0.95) + ")";
+      const lx = barX0 + colW * k + colW / 2;
+      p.split(" ").forEach((word, line) => ctx.fillText(word, lx, base + 14 + line * (narrow ? 12 : 15)));
+    });
+    ctx.fillStyle = "rgba(224,137,126," + (t * 0.9) + ")";
+    ctx.fillText("fact-checks", narrow ? W * 0.18 : W * 0.2, base + 14);
+    // dots
+    dots.forEach((d, i) => {
+      const wob = reduce ? 0 : (1 - t) * 6;
+      const sx = W * (0.04 + d.sx * (narrow ? 0.5 : 0.56)) + Math.sin(time * d.sp + d.ph) * wob;
+      const sy = H * (0.08 + d.sy * 0.8) + Math.cos(time * d.sp * 0.9 + d.ph) * wob;
+      let tx, ty, r = 2.4, alpha = 0.85, col;
+      if (d.type === 0) {
+        tx = barX0 + colW * d.pub + colW / 2;
+        ty = base - 10 - d.slot * (narrow ? 14 : 18);
+        r = 2.4 + 3.6 * t; col = [169, 194, 177];
+      } else if (d.type === 2) {
+        const k = i - 136;
+        tx = (narrow ? W * 0.18 : W * 0.2) + ((k % 7) - 3) * 9;
+        ty = base - 6 - Math.floor(k / 7) * 9;
+        r = 2.4 + 0.6 * t; col = [224, 137, 126];
+      } else {
+        tx = sx; ty = sy; alpha = 0.85 - 0.6 * t; col = [110, 117, 112];
+      }
+      const x = sx + (tx - sx) * t, y = sy + (ty - sy) * t;
+      ctx.fillStyle = "rgba(" + col[0] + "," + col[1] + "," + col[2] + "," + alpha + ")";
+      ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
+    });
+    // stats text
+    $("#stat-c").textContent = String(Math.round(4 * t));
+    $("#stat-b-label").textContent = t < 0.3 ? "reading every headline" : t < 0.95 ? "sorting by publisher and similarity" : "score 86: likely verified";
+    $("#stat-c-label").textContent = t < 0.95 ? "trusted publishers found so far" : "trusted publishers report the same story";
+    if (!touched) range.value = String(Math.round(value * 1000));
+    if (visible && (Math.abs(target - value) > 0.001 || !reduce)) raf = requestAnimationFrame(frame);
+    else raf = 0;
+  }
+  function start() { if (!raf) raf = requestAnimationFrame(frame); }
+  function autoplay() {
+    touched = false; value = 0; target = 0;
+    if (reduce) { target = 1; value = 1; start(); return; }
+    const t0 = performance.now(), dur = 3800;
+    (function step(now) {
+      if (touched) return;
+      const k = Math.min(1, (now - t0) / dur);
+      target = k;
+      start();
+      if (k < 1) requestAnimationFrame(step);
+    })(t0);
+  }
+  range.addEventListener("input", () => { touched = true; target = Number(range.value) / 1000; start(); });
+  $("#replay").addEventListener("click", () => { range.value = "0"; autoplay(); });
+  new IntersectionObserver(es => {
+    visible = es[0].isIntersecting;
+    if (visible) { start(); if (!autoplayed) { autoplayed = true; setTimeout(autoplay, 400); } }
+  }, { threshold: .35 }).observe(canvas);
+  window.addEventListener("resize", () => { size(); start(); });
+  size();
+  start();
+})();
+</script>
+</body>
+</html>
